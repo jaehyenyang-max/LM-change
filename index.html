@@ -61,8 +61,6 @@
     <div class="form-grid">
      <div class="field"><label>업체명 *</label><input id="sName" placeholder="예: 넥스턴앤롤코리아"></div>
      <div class="field"><label>계약 기준일</label><input id="sBaseDate" type="date"></div>
-     <div class="field"><label>계약 시작일</label><input id="sStart" type="date"></div>
-     <div class="field"><label>계약 종료일</label><input id="sEnd" type="date"></div>
      <div class="field"><label>2. 주요 연동제 적용 품목 *</label><input id="sMainProduct" placeholder="예: Drive Unit Assy"></div>
      <div class="field"><label>5. 트리거 변동율 (Index 변동폭, %) *</label><input id="sTrigger" type="number" min="0" step="0.1" placeholder="예: 5"><span class="small">직전 조정 시점 대비 +5% 이상 또는 -5% 이하인 지표를 변동 후보로 표시합니다.</span></div>
      <div class="field"><label>6. 연동주기 *</label><select id="sCycle"><option value="1년">1년</option><option value="반기">반기</option><option value="분기">분기</option></select></div>
@@ -74,13 +72,9 @@
      <div id="contractMaterialRows"><div class="empty">원재료를 입력하고 [원재료 행 생성]을 눌러주세요.</div></div>
     </div>
     <div class="panel" style="margin-top:14px">
-     <div class="panel-head"><h3>7. 조정일 등록</h3><span class="muted">계약서에 해당하는 조정일을 선택하세요.</span></div>
-     <div id="adjustmentDateOptions" class="toolbar">
-      <label class="date-option"><input type="checkbox" value="01-16" checked> 1월 16일</label>
-      <label class="date-option"><input type="checkbox" value="04-16" checked> 4월 16일</label>
-      <label class="date-option"><input type="checkbox" value="07-16" checked> 7월 16일</label>
-      <label class="date-option"><input type="checkbox" value="10-16" checked> 10월 16일</label>
-     </div>
+     <div class="panel-head"><h3>7. 조정일 등록</h3><button class="btn" type="button" onclick="addAdjustmentDate()">＋ 조정일 추가</button></div>
+     <p class="small">계약서에 명시된 실제 조정일을 달력에서 선택하세요. 조정일은 필요한 만큼 여러 개 등록할 수 있으며, 예시 날짜를 미리 지정하지 않습니다.</p>
+     <div id="adjustmentDateOptions" class="adjustment-date-list"></div>
     </div>
     <div class="field" style="margin-top:14px"><label>9. 납품대금 연동산식 설명 (계약서 문구)</label><textarea id="sLinkageFormula" rows="3" placeholder="예: 원소재별 중량(kg) x 기준지표 변동액(원/kg) => 원소재별 변동 금액 합산"></textarea><span class="small">설명 문구를 원문 그대로 보관합니다. 자동 계산식으로 임의 해석하지 않습니다.</span></div>
     <div class="toolbar"><button class="btn primary" onclick="saveSupplier()">계약정보 저장</button><button class="btn" onclick="closeSupplierForm()">취소</button></div>
@@ -140,15 +134,40 @@ function openSupplierForm(id){
  editingSupplier=id||null;
  const s=db.suppliers.find(x=>x.id===id)||{};
  document.getElementById('supplierFormTitle').textContent=id?'업체 및 연동제 계약정보 수정':'업체 및 연동제 계약정보 등록';
- const fields={sName:s.name,sBaseDate:s.baseDate,sStart:s.start,sEnd:s.end,sMainProduct:s.mainProduct,sTrigger:s.triggerPercent,sCycle:s.cycle||'분기',sLinkageFormula:s.linkageFormula||s.formula};
+ const fields={sName:s.name,sBaseDate:s.baseDate,sMainProduct:s.mainProduct,sTrigger:s.triggerPercent,sCycle:s.cycle||'분기',sLinkageFormula:s.linkageFormula||s.formula};
  Object.entries(fields).forEach(([k,v])=>document.getElementById(k).value=v??'');
  document.getElementById('sMaterialsInput').value=(s.materials||[]).map(m=>m.name).join('\n');
- const dates=s.adjustmentDates||['01-16','04-16','07-16','10-16'];
- document.querySelectorAll('#adjustmentDateOptions input').forEach(c=>c.checked=dates.includes(c.value));
+ const dates=(s.adjustmentDates||[]).map(d=>/^\d{2}-\d{2}$/.test(d)?`${new Date().getFullYear()}-${d}`:d);
+ renderAdjustmentDateInputs(dates.length?dates:['']);
  renderContractMaterialRows(s.materials||[]);
  document.getElementById('supplierForm').classList.remove('hidden');
 }
 function closeSupplierForm(){document.getElementById('supplierForm').classList.add('hidden')}
+
+function renderAdjustmentDateInputs(dates){
+ const host=document.getElementById('adjustmentDateOptions');
+ const list=(dates&&dates.length)?dates:[''];
+ host.innerHTML=list.map((date,i)=>`<div class="adjustment-date-row">
+  <label class="small" style="min-width:62px">조정일 ${i+1}</label>
+  <input type="date" class="adjustment-date-value" value="${esc(date||'')}">
+  <button type="button" class="btn" onclick="removeAdjustmentDate(this)" ${list.length===1?'disabled':''}>삭제</button>
+ </div>`).join('');
+}
+function addAdjustmentDate(){
+ const dates=[...document.querySelectorAll('.adjustment-date-value')].map(x=>x.value);
+ dates.push('');
+ renderAdjustmentDateInputs(dates);
+}
+function removeAdjustmentDate(button){
+ const row=button.closest('.adjustment-date-row');
+ if(row)row.remove();
+ const dates=[...document.querySelectorAll('.adjustment-date-value')].map(x=>x.value);
+ if(!dates.length)renderAdjustmentDateInputs(['']);
+ else renderAdjustmentDateInputs(dates);
+}
+function collectAdjustmentDates(){
+ return [...document.querySelectorAll('.adjustment-date-value')].map(x=>x.value.trim()).filter(Boolean);
+}
 function splitMaterialNames(){return [...new Set(document.getElementById('sMaterialsInput').value.split(/[,，、\n\/]+/).map(x=>x.trim()).filter(Boolean))]}
 function buildMaterialRows(){
  const names=splitMaterialNames();
@@ -198,15 +217,14 @@ function saveSupplier(){
  if(triggerRaw===''||!Number.isFinite(Number(triggerRaw))||Number(triggerRaw)<0){alert('0 이상의 트리거 변동율(%)을 입력하세요.');return}
  if(!finalMaterials.length){alert('주요 원재료 또는 에너지를 1개 이상 입력하세요.');return}
  if(!document.querySelector('#contractMaterialRows .material-map-row')&&finalMaterials.length){alert('[원재료 행 생성]을 먼저 눌러 기준지표를 연결하세요.');return}
- const adjustmentDates=[...document.querySelectorAll('#adjustmentDateOptions input:checked')].map(x=>x.value);
- if(!adjustmentDates.length){alert('조정일을 하나 이상 선택하세요.');return}
+ const adjustmentDates=collectAdjustmentDates();
+ if(!adjustmentDates.length){alert('조정일을 달력에서 하나 이상 선택하세요.');return}
  const missing=finalMaterials.filter(m=>!m.indexIds.length);
  if(missing.length&&!confirm('기준지표가 연결되지 않은 원재료가 있습니다: '+missing.map(m=>m.name).join(', ')+'\n미연결 상태로 저장할까요?'))return;
  const formula=document.getElementById('sLinkageFormula').value.trim();
  const data={
   id:editingSupplier||crypto.randomUUID(),name,mainProduct,
   baseDate:document.getElementById('sBaseDate').value,
-  start:document.getElementById('sStart').value,end:document.getElementById('sEnd').value,
   triggerPercent:Number(triggerRaw),cycle:document.getElementById('sCycle').value,
   adjustmentDates,materials:finalMaterials,linkageFormula:formula,formula,
   updatedAt:new Date().toISOString()
@@ -223,7 +241,7 @@ function renderSuppliers(){
  el.innerHTML=db.suppliers.length?db.suppliers.map(s=>`<tr>
  <td><b>${esc(s.name)}</b><div class="small">${esc(s.mainProduct||'적용 품목 미등록')}</div></td>
  <td>${esc(s.cycle||'-')}<div class="small">Trigger ±${s.triggerPercent??'-'}%</div></td>
- <td>${esc(s.baseDate||'-')}</td><td>${esc(s.start||'-')} ~ ${esc(s.end||'-')}</td>
+ <td>${esc(s.baseDate||'-')}</td><td>${(s.adjustmentDates||[]).map(d=>esc(d)).join(', ')||'-'}</td>
  <td>${db.parts.filter(p=>p.supplierId===s.id).length}개</td>
  <td><button class="action-link" onclick="openSupplierForm('${s.id}')">수정</button><button class="action-link" onclick="deleteSupplier('${s.id}')">삭제</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty">등록된 업체가 없습니다. 업체 등록부터 시작하세요.</td></tr>';
 }
