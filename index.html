@@ -62,10 +62,10 @@
    <div class="notice">GitHub Pages에서 PDF·DOCX 계약서 자동입력 및 XLSX 업로드를 테스트할 수 있습니다. 스캔 PDF는 브라우저 OCR로 분석합니다. 실제 계약서나 기밀자료는 사용하지 마세요. 연동액 계산은 아직 미구현입니다.</div>
   </section>
   <section id="suppliers" class="section">
-   <div class="page-head"><div><h1>업체 및 계약 관리</h1><p>업체별 계약 조건을 등록합니다. 동일 업체의 여러 품번은 계약 정보를 공유할 수 있습니다.</p></div><div class="toolbar"><button class="btn" onclick="openSupplierForm();document.getElementById('contractFile').click()">📄 계약서 자동입력</button><button class="btn primary" onclick="openSupplierForm()">＋ 업체 등록</button></div></div>
+   <div class="page-head"><div><h1>업체 및 계약 관리</h1><p>업체별 계약 조건을 등록합니다. 동일 업체의 여러 품번은 계약 정보를 공유할 수 있습니다.</p></div><button class="btn primary" onclick="openSupplierForm()">＋ 업체 등록</button></div>
    <div class="panel"><div class="panel-head"><h3>업체 목록</h3><span class="muted" id="supplierCount">0개 업체</span></div><div class="table-wrap"><table><thead><tr><th>업체명</th><th>계약 적용 주기</th><th>최초 계약일</th><th>갱신 시점</th><th>등록 품번</th><th>관리</th></tr></thead><tbody id="supplierRows"></tbody></table></div></div>
    <div id="supplierForm" class="panel hidden">
-    <div class="panel-head"><h3 id="supplierFormTitle">업체 및 연동제 계약정보 등록</h3><button class="btn" onclick="closeSupplierForm()">닫기</button></div>
+    <div class="panel-head"><h3 id="supplierFormTitle">업체 및 연동제 계약정보 등록</h3><div class="toolbar"><button class="btn" type="button" onclick="document.getElementById('contractFile').click()">📄 계약서 자동입력</button><button class="btn" type="button" onclick="closeSupplierForm()">닫기</button></div></div>
     <div class="form-grid">
      <div class="field"><label>업체명 *</label><input id="sName" placeholder="예: 넥스턴앤롤코리아"></div>
      <div class="field"><label>최초 계약일</label><input id="sBaseDate" type="date"></div>
