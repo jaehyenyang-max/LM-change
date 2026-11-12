@@ -67,15 +67,15 @@
    <div id="supplierForm" class="panel hidden">
     <div class="panel-head"><h3 id="supplierFormTitle">업체 및 연동제 계약정보 등록</h3><div class="toolbar"><button class="btn" type="button" onclick="document.getElementById('contractFile').click()">📄 계약서 자동입력</button><button class="btn" type="button" onclick="closeSupplierForm()">닫기</button></div></div>
     <div class="form-grid">
-     <div class="field"><label>업체명 *</label><input id="sName" placeholder="예: 넥스턴앤롤코리아"></div>
+     <div class="field"><label>업체명 *</label><input id="sName" placeholder="예: HD현대"></div>
      <div class="field"><label>최초 계약일</label><input id="sBaseDate" type="date"></div>
-     <div class="field"><label>2. 주요 연동제 적용 품목 *</label><input id="sMainProduct" placeholder="예: Drive Unit Assy"></div>
+     <div class="field"><label>2. 주요 연동제 적용 품목 *</label><input id="sMainProduct" placeholder="예: Transmission"></div>
      <div class="field"><label>5. 트리거 변동율 (Index 변동폭, %) *</label><input id="sTrigger" type="number" min="0" step="0.1" placeholder="예: 5"><span class="small">직전 조정 시점 대비 +5% 이상 또는 -5% 이하인 지표를 변동 후보로 표시합니다.</span></div>
      <div class="field"><label>6. 연동주기 *</label><select id="sCycle"><option value="1년">1년</option><option value="반기">반기</option><option value="분기">분기</option></select></div>
     </div>
     <div class="panel" style="margin-top:14px;background:#f8faff;border-color:#dce8fb">
      <div class="panel-head"><h3>3~4. 주요 원재료 및 가격 기준지표 연결</h3><span class="muted">Index 데이터 관리에 등록된 목록에서 선택</span></div>
-     <div class="field"><label>3. 주요 원재료 또는 주요 에너지 *</label><textarea id="sMaterialsInput" rows="2" placeholder="예: 주물 / SCM420H / SCM822 / S45C"></textarea><span class="small">슬래시, 쉼표 또는 줄바꿈으로 구분하고 [원재료 행 생성]을 누르세요. OCR 오류는 생성된 원재료 이름에서도 직접 수정할 수 있습니다.</span></div>
+     <div class="field"><label>3. 주요 원재료 또는 주요 에너지 *</label><textarea id="sMaterialsInput" rows="2" placeholder="예: 주물 / 전기 / S45C 등"></textarea><span class="small">슬래시, 쉼표 또는 줄바꿈으로 구분하고 [원재료 행 생성]을 누르세요. OCR 오류는 생성된 원재료 이름에서도 직접 수정할 수 있습니다.</span></div>
      <div class="toolbar" style="margin:10px 0"><button class="btn" type="button" onclick="buildMaterialRows()">원재료 행 생성</button><span class="small">자동 인식한 원재료명은 아래 각 행에서 직접 수정할 수 있으며 연결한 지표도 유지됩니다.</span></div>
      <div id="contractMaterialRows"><div class="empty">원재료를 입력하고 [원재료 행 생성]을 눌러주세요.</div></div>
     </div>
