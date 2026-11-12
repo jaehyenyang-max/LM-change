@@ -110,7 +110,7 @@
    <div class="page-head"><div><h1>Index 데이터 관리</h1><p>구매기획팀에서 배포한 원소재 Index 데이터를 등록하고 확인합니다.</p></div><button class="btn primary" onclick="document.getElementById('indexFile').click()">＋ Index Excel 업로드</button></div>
    <input id="indexFile" type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="importIndexes(event)">
    <div class="notice">현재 시제품은 구매기획팀에서 제공하는 가로형 Excel(.xlsx) 파일을 업로드합니다. 첫 번째 Sheet에서 원소재 이름·규격·기준·단위·출처 및 날짜별 가격을 읽어 기준지표 목록으로 등록합니다. CSV 업로드도 지원합니다.</div>
-   <div class="panel"><div class="panel-head"><h3>등록된 Index 데이터</h3><span class="muted" id="indexCount">0건</span></div><div class="table-wrap"><table><thead><tr><th>원소재 이름</th><th>규격</th><th>기준</th><th>단위</th><th>출처</th><th>원본 파일 / Sheet</th><th>가격 데이터 수</th></tr></thead><tbody id="indexRows"></tbody></table></div></div>
+   <div class="panel"><div class="panel-head"><h3>등록된 Index 데이터</h3><div class="toolbar"><span class="muted" id="indexCount">0건</span><button class="btn danger" id="clearIndexesBtn" type="button" onclick="clearAllIndexes()">전체 삭제</button></div></div><div class="table-wrap"><table><thead><tr><th>원소재 이름</th><th>규격</th><th>기준</th><th>단위</th><th>출처</th><th>원본 파일 / Sheet</th><th>가격 데이터 수</th><th>관리</th></tr></thead><tbody id="indexRows"></tbody></table></div><p class="small" style="margin-top:12px">※ 삭제 시 해당 지표와 업체 계약정보의 지표 연결만 해제됩니다. 업체·품번·원소재 사용량은 유지됩니다. 삭제된 지표는 재업로드해야 합니다.</p></div>
   </section>
   <section id="calculation" class="section">
    <div class="page-head"><div><h1>연동제 계산</h1><p>업체 계약 조건과 품번별 데이터를 기준으로 계산 검토를 준비합니다.</p></div></div>
@@ -366,17 +366,61 @@ function importIndexes(e){
  };
  if(excel)reader.readAsArrayBuffer(file);else reader.readAsText(file,'UTF-8');
 }
+function getIndexLinks(ids){
+ const set=new Set(ids);
+ const affected=[];
+ for(const supplier of db.suppliers){
+  for(const material of (supplier.materials||[])){
+   if((material.indexIds||[]).some(id=>set.has(id)))affected.push(`${supplier.name} / ${material.name}`);
+  }
+ }
+ return affected;
+}
+function detachDeletedIndexes(ids){
+ const set=new Set(ids);
+ for(const supplier of db.suppliers){
+  for(const material of (supplier.materials||[])){
+   if(Array.isArray(material.indexIds))material.indexIds=material.indexIds.filter(id=>!set.has(id));
+  }
+ }
+}
+function deleteIndex(id){
+ const item=db.indexes.find(x=>x.id===id);
+ if(!item)return;
+ const label=indexOptionLabel(item);
+ const linked=getIndexLinks([id]);
+ const warning=linked.length?`\n\n이 지표를 연결한 계약 원소재 ${linked.length}건의 연결도 해제됩니다.\n${linked.slice(0,5).join('\n')}${linked.length>5?'\n외 '+(linked.length-5)+'건':''}`:'';
+ if(!confirm(`다음 Index 지표를 삭제할까요?\n${label}${warning}\n\n삭제한 지표는 재업로드해야 합니다.`))return;
+ db.indexes=db.indexes.filter(x=>x.id!==id);
+ detachDeletedIndexes([id]);
+ log('Index 개별 삭제',`${item.materialName||item.name||'이름 미상'} / 계약 연결 ${linked.length}건 해제`);
+ persist();
+}
+function clearAllIndexes(){
+ if(!db.indexes.length)return;
+ const count=db.indexes.length;
+ const linked=getIndexLinks(db.indexes.map(x=>x.id));
+ if(!confirm(`등록된 Index ${count}개를 모두 삭제할까요?\n업체·품번 정보는 유지됩니다.${linked.length?'\n계약 원소재 '+linked.length+'건의 Index 연결도 해제됩니다.':''}\n\n삭제 후에는 새 Excel을 업로드하고 계약별 Index 연결을 다시 확인해야 합니다.`))return;
+ detachDeletedIndexes(db.indexes.map(x=>x.id));
+ db.indexes=[];
+ log('Index 전체 삭제',`${count}개 지표 삭제 / 계약 연결 ${linked.length}건 해제`);
+ persist();
+ alert(`${count}개 Index 지표를 삭제했습니다. 새 Excel 업로드 후 계약별 지표 연결을 확인하세요.`);
+}
 function renderIndexes(){
  document.getElementById('indexCount').textContent=db.indexes.length+'개 지표';
+ document.getElementById('clearIndexesBtn').disabled=db.indexes.length===0;
  const rows=db.indexes.slice().reverse();
  document.getElementById('indexRows').innerHTML=rows.length?rows.map(x=>`<tr>
  <td><b>${esc(x.materialName||x.name||'-')}</b></td><td>${esc(x.specification||'규격 미기재')}</td>
  <td>${esc(x.standard||'-')}</td><td>${esc(x.unit||'단위 미기재')}</td><td>${esc(x.sourceName||x.source||'-')}</td>
  <td>${esc(x.sourceFile||'-')}<div class="small">${esc(x.sourceSheet||x.originalSheet||'')}</div></td>
- <td>${x.periodCount??(x.values?Object.keys(x.values).length:1)}</td></tr>`).join(''):'<tr><td colspan="7" class="empty">등록된 Index 데이터가 없습니다. 구매기획팀 Excel 파일을 업로드하세요.</td></tr>';
+ <td>${x.periodCount??(x.values?Object.keys(x.values).length:1)}</td>
+ <td><button type="button" class="action-link" style="color:var(--red)" data-index-id="${esc(x.id)}" onclick="deleteIndex(this.dataset.indexId)">삭제</button></td></tr>`).join(''):'<tr><td colspan="8" class="empty">등록된 Index 데이터가 없습니다. 구매기획팀 Excel 파일을 업로드하세요.</td></tr>';
  const head=document.querySelector('#indexes table thead');
- if(head)head.innerHTML='<tr><th>원소재 이름</th><th>규격</th><th>기준</th><th>단위</th><th>출처</th><th>원본 파일 / Sheet</th><th>가격 데이터 수</th></tr>';
+ if(head)head.innerHTML='<tr><th>원소재 이름</th><th>규격</th><th>기준</th><th>단위</th><th>출처</th><th>원본 파일 / Sheet</th><th>가격 데이터 수</th><th>관리</th></tr>';
 }
+
 function fillCalcParts(){let sid=document.getElementById('calcSupplier').value;document.getElementById('calcPart').innerHTML=db.parts.filter(p=>p.supplierId===sid).map(p=>`<option value="${esc(p.partNo)}">${esc(p.partNo)} ${esc(p.partName||'')}</option>`).join('')||'<option value="">품번 없음</option>'}
 function validateCalculation(){let sid=document.getElementById('calcSupplier').value,partNo=document.getElementById('calcPart').value,p=db.parts.find(x=>x.supplierId===sid&&x.partNo===partNo),s=db.suppliers.find(x=>x.id===sid);if(!p||!s){alert('업체와 품번을 선택하세요.');return}let issues=[];if(!s.formula)issues.push('업체 계약 수식 또는 조건 메모 미등록');if(p.basePrice===''||p.basePrice==null)issues.push('기준 파트단가 누락');if(!Object.keys(p.weights||{}).length)issues.push('원소재 사용량 미등록');if(!db.indexes.length)issues.push('Index 데이터 미등록');let req=document.getElementById('requestedPrice').value;let el=document.getElementById('calcResult');el.classList.remove('hidden');el.innerHTML=`<div class="panel-head"><h3>검증 결과 · ${esc(partNo)}</h3><span class="pill orange">계산 실행 전 검토</span></div><p><b>업체:</b> ${esc(s.name)}　 <b>기준 파트단가:</b> ${money(p.basePrice)}원/EA　 <b>업체 요청단가:</b> ${req?money(req)+'원/EA':'미입력'}</p><p><b>등록 소재:</b> ${Object.entries(p.weights||{}).map(([k,v])=>esc(k)+' '+v+'kg').join(' / ')||'없음'}</p><hr style="border:0;border-top:1px solid #edf0f5"><b>확인 항목</b><ul>${issues.length?issues.map(x=>'<li style="color:#c17a1d">'+esc(x)+'</li>').join(''):'<li style="color:#16845e">기본 입력 데이터 확인 완료. 다만 계약 수식·Index 매칭의 유효성은 별도 검증이 필요합니다.</li>'}</ul><div class="notice">이 시제품은 실제 연동액과 변경 단가를 계산하지 않습니다. 계약서의 산식·단위·기준 Index를 검증한 계산 엔진이 구현되기 전까지 결과를 확정값으로 사용하지 마세요.</div><button class="btn" onclick="window.print()">검증 화면 인쇄</button>`;log('검증',s.name+' / '+partNo+' / 검토 '+issues.length+'건');persist()}
 function renderHistory(){document.getElementById('historyRows').innerHTML=db.history.length?db.history.map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.type)}</td><td>${esc(x.detail)}</td></tr>`).join(''):'<tr><td colspan="3" class="empty">저장된 이력이 없습니다.</td></tr>'}
