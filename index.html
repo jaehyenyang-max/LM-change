@@ -16,6 +16,12 @@
 .material-name-input{width:100%;max-width:220px;border:1px solid #cbd8eb;border-radius:7px;padding:9px;font-size:13px;font-weight:700;color:#243247;background:#fff}.material-name-input:focus{outline:2px solid #bad3ff;border-color:#3478f6}.material-map-row select{width:100%;min-width:0;padding:10px;border:1px solid #dce3ed;border-radius:8px;background:#fff;font-size:12px}
 .index-chip{display:flex;align-items:center;gap:6px;background:#eaf2ff;border:1px solid #d5e4ff;border-radius:7px;padding:6px 8px;font-size:11px;max-width:100%;white-space:normal}
 .index-chip button{border:0;background:transparent;color:#b33;cursor:pointer;font-weight:700}
+.material-formula-panel{margin-top:13px;padding:13px;background:#fff;border:1px solid #dae4f2;border-radius:9px}
+.material-formula-panel label{display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:#33445c}
+.material-formula-panel textarea{width:100%;min-height:65px;resize:vertical;padding:10px;border:1px solid #dce3ed;border-radius:7px;font:12px/1.6 "Malgun Gothic",sans-serif}
+.material-formula-panel .index-aliases{font-size:11px;color:#526176;line-height:1.9;margin:8px 0;white-space:normal}
+.material-formula-panel .index-aliases code{background:#eaf2ff;padding:2px 5px;border-radius:4px;color:#285bb2}
+.material-formula-panel .small{line-height:1.6}
 @media(max-width:700px){.material-map-row{grid-template-columns:1fr}}
 
 .contract-upload{background:#f3f7ff;border:1px solid #cbdaf5;border-radius:11px;padding:16px;margin-bottom:18px}
@@ -76,7 +82,7 @@
     <div class="panel" style="margin-top:14px;background:#f8faff;border-color:#dce8fb">
      <div class="panel-head"><h3>3~4. 주요 원재료 및 가격 기준지표 연결</h3><span class="muted">Index 데이터 관리에 등록된 목록에서 선택</span></div>
      <div class="field"><label>3. 주요 원재료 또는 주요 에너지 *</label><textarea id="sMaterialsInput" rows="2" placeholder="예: 주물 / 전기 / S45C 등"></textarea><span class="small">슬래시, 쉼표 또는 줄바꿈으로 구분하고 [원재료 행 생성]을 누르세요. OCR 오류는 생성된 원재료 이름에서도 직접 수정할 수 있습니다.</span></div>
-     <div class="toolbar" style="margin:10px 0"><button class="btn" type="button" onclick="buildMaterialRows()">원재료 행 생성</button><span class="small">자동 인식한 원재료명은 아래 각 행에서 직접 수정할 수 있으며 연결한 지표도 유지됩니다.</span></div>
+     <div class="toolbar" style="margin:10px 0"><button class="btn" type="button" onclick="buildMaterialRows()">원재료 행 생성</button><span class="small">업체별·원소재별로 지표 연결과 계산 산식을 각각 저장합니다. 같은 소재라도 업체마다 다른 산식을 등록할 수 있습니다.</span></div>
      <div id="contractMaterialRows"><div class="empty">원재료를 입력하고 [원재료 행 생성]을 눌러주세요.</div></div>
     </div>
     <div class="panel" style="margin-top:14px">
@@ -98,12 +104,12 @@
    </div>
   </section>
   <section id="parts" class="section">
-   <div class="page-head"><div><h1>품번 및 원소재 사용량 관리</h1><p>업체별 기준 파트단가와 품번별 원소재 사용량을 독립적으로 관리합니다.</p></div><div class="toolbar"><button class="btn" onclick="downloadTemplate()">양식 CSV 다운로드</button><button class="btn" onclick="document.getElementById('partFile').click()">CSV 업로드</button><button class="btn primary" onclick="addPartRow()">＋ 품번 추가</button></div></div>
-   <div class="notice">원소재 열은 업체별 계약정보에 등록한 소재를 자동 반영하며, 필요하면 업체를 선택한 뒤 추가할 수 있습니다. 환율은 kg 입력 대상이 아니므로 소재 중량 열에 넣지 말고 계약 조건 메모로 별도 관리하세요. CSV 업로드는 엑셀에서 ‘CSV UTF-8’ 형식으로 저장한 파일을 지원합니다.</div>
-   <input id="partFile" type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="importParts(event)">
-   <div class="panel"><div class="panel-head"><h3>품번 데이터</h3><div class="toolbar"><label class="muted">업체 선택</label><select id="partSupplierFilter" class="btn" onchange="renderParts()"><option value="">전체 업체</option></select><button class="btn" onclick="addMaterial()">＋ 원소재 열 추가</button><button class="btn primary" onclick="saveParts()">변경사항 저장</button></div></div>
+   <div class="page-head"><div><h1>품번 및 원소재 사용량 관리</h1><p>업체별 등록 단가·단가 기준일과 품번별 중량(kg)·원가비중(%)을 관리합니다.</p></div><div class="toolbar"><button class="btn primary" onclick="addPartRow()">＋ 품번 추가</button></div></div>
+   <div class="notice">업체 계약의 소재를 품번에 자동 반영합니다. 철·고무 등은 중량(kg), 전기·가스 등은 원가비중(%)으로 기본 설정하며 업체 계약 화면에서 소재별 입력방식을 변경할 수 있습니다. 원가비중은 0~100%를 입력하세요. 업체를 선택한 뒤 그 업체 전용 CSV 양식을 다운로드하고 업로드하세요. Excel에서는 ‘CSV UTF-8’ 형식으로 저장해야 합니다.</div>
+   <input id="partFile" type="file" accept=".csv,text/csv" class="hidden" onchange="importParts(event)">
+   <div class="panel"><div class="panel-head"><h3>품번 데이터</h3><div class="toolbar"><label class="muted">업체 선택</label><select id="partSupplierFilter" class="btn" onchange="renderParts()"><option value="">전체 업체</option></select><button class="btn" onclick="downloadTemplate()">선택 업체 CSV 양식 다운로드</button><button class="btn" onclick="openPartCsvUpload()">선택 업체 CSV 업로드</button><button class="btn" onclick="addMaterial()">＋ 원소재 열 추가</button><button class="btn primary" onclick="saveParts()">변경사항 저장</button></div></div>
     <div class="table-wrap"><table><thead id="partHead"></thead><tbody id="partRows"></tbody></table></div>
-    <div class="small" style="margin-top:12px">※ 빈 셀은 미입력, 0은 사용량 0kg으로 구분하여 저장합니다. 품번별 소재 데이터는 별도 행으로 저장됩니다.</div>
+    <div class="small" style="margin-top:12px">※ 등록 단가 및 기준일을 개정하면 이전 이력은 유지하며 「등록 단가 변경」으로 기록합니다. 입력 열의 단위는 업체별 소재 설정에 따릅니다. 공란은 미입력, 0은 사용량·비중 0으로 구분합니다.</div>
    </div>
   </section>
   <section id="indexes" class="section">
@@ -113,8 +119,8 @@
    <div class="panel"><div class="panel-head"><h3>등록된 Index 데이터</h3><div class="toolbar"><span class="muted" id="indexCount">0건</span><button class="btn danger" id="clearIndexesBtn" type="button" onclick="clearAllIndexes()">전체 삭제</button></div></div><div class="table-wrap"><table><thead><tr><th>원소재 이름</th><th>규격</th><th>기준</th><th>단위</th><th>출처</th><th>원본 파일 / Sheet</th><th>가격 데이터 수</th><th>관리</th></tr></thead><tbody id="indexRows"></tbody></table></div><p class="small" style="margin-top:12px">※ 삭제 시 해당 지표와 업체 계약정보의 지표 연결만 해제됩니다. 업체·품번·원소재 사용량은 유지됩니다. 삭제된 지표는 재업로드해야 합니다.</p></div>
   </section>
   <section id="calculation" class="section">
-   <div class="page-head"><div><h1>연동제 계산</h1><p>업체 계약 조건과 품번별 데이터를 기준으로 계산 검토를 준비합니다.</p></div></div>
-   <div class="notice">중요: 실제 계약 수식이 등록·검증되지 않은 상태에서 임의의 연동액을 산출하지 않습니다. 이 시제품은 계산 대상 선택과 데이터 완전성 점검까지만 수행합니다.</div>
+   <div class="page-head"><div><h1>연동제 계산</h1><p>업체 계약의 갱신 시점과 품번별 단가 기준일을 확인하고 연동 계산을 준비합니다.</p></div></div>
+   <div class="notice">중요: 갱신 시점과 단가 기준일은 확인할 수 있지만, 실제 연동액 산출은 계약별 기준시점·비교시점·Index 단위와 산식을 검증한 뒤 적용해야 합니다. 현재는 기준 정보와 데이터 검증 단계입니다.</div>
    <div class="panel"><h3 style="font-size:15px;margin-top:0">계산 대상 선택</h3><div class="form-grid">
     <div class="field"><label>업체</label><select id="calcSupplier" onchange="fillCalcParts()"></select></div>
     <div class="field"><label>품번</label><select id="calcPart"></select></div>
@@ -129,7 +135,7 @@
    <div class="panel"><div class="panel-head"><h3>계산·수정 이력</h3><button class="btn danger" onclick="clearHistory()">이력 비우기</button></div><div class="table-wrap"><table><thead><tr><th>일시</th><th>유형</th><th>내용</th></tr></thead><tbody id="historyRows"></tbody></table></div></div>
    <div class="panel"><h3 style="font-size:15px">보고서 준비 상태</h3><p class="muted">Word 템플릿 업로드 및 기존 표·서식 유지 생성 기능은 후속 단계에서 연결합니다. 현재는 브라우저 인쇄 기능으로 화면을 출력할 수 있습니다.</p></div>
   </section>
-  <div class="footer-note">OEM RAW MATERIAL LINKAGE · GITHUB TEST · v0.2</div>
+  <div class="footer-note">OEM RAW MATERIAL LINKAGE · GITHUB TEST · v0.4</div>
  </div>
 </main>
 </div>
@@ -205,27 +211,55 @@ function buildMaterialRows(){
  const names=splitMaterialNames();
  if(!names.length){alert('주요 원재료 또는 에너지 이름을 입력하세요.');return}
  const old=collectContractMaterialRows();
- const next=names.map(name=>old.find(m=>m.name===name)||{name,indexIds:[]});
+ const next=names.map(name=>old.find(m=>m.name===name)||{name,indexIds:[],inputType:guessMaterialType(name)});
  renderContractMaterialRows(next);
 }
 function indexOptionLabel(x){
  return `${x.materialName||x.name||'이름 미상'} | 규격: ${x.specification||'미기재'} | 기준: ${x.standard||'미기재'} | 단위: ${x.unit||'미기재'} | 출처: ${x.sourceName||'미기재'}`;
 }
+// 원소재별 Index 기호는 등록된 지표 ID에 연결하여 삭제/추가해도 기존 기호가 바뀌지 않습니다.
+function normalizeIndexAliases(material){
+ const aliases={...(material.indexAliases||{})};
+ const used=new Set(Object.values(aliases));
+ let n=1;
+ for(const id of material.indexIds||[]){
+  if(!aliases[id]){while(used.has('I'+n))n++;aliases[id]='I'+n;used.add(aliases[id]);}
+ }
+ return aliases;
+}
 function renderContractMaterialRows(materials){
  const host=document.getElementById('contractMaterialRows');
  if(!materials.length){host.innerHTML='<div class="empty">원재료를 입력하고 [원재료 행 생성]을 눌러주세요.</div>';return}
  host.innerHTML=materials.map((m,i)=>{
+  const aliases=normalizeIndexAliases(m);
   const options=(db.indexes||[]).map(x=>`<option value="${esc(x.id)}">${esc(indexOptionLabel(x))}</option>`).join('');
-  const chips=(m.indexIds||[]).map(id=>{const x=db.indexes.find(z=>z.id===id);return x?`<span class="index-chip">${esc(indexOptionLabel(x))}<button type="button" onclick="removeContractIndex(${i},'${id}')">×</button></span>`:''}).join('');
-  return `<div class="material-map-row" data-row="${i}" data-name="${esc(m.name)}" data-index-ids="${esc(JSON.stringify(m.indexIds||[]))}">
-   <div><input class="material-name-input" aria-label="원재료 이름 수정" title="자동 추출된 원재료명을 수정하세요" value="${esc(m.name)}" oninput="syncMaterialNamesFromRows()"><div class="small">주요 원재료 / 에너지 · 이름 수정 가능</div></div>
+  const chips=(m.indexIds||[]).map(id=>{const x=db.indexes.find(z=>z.id===id);return x?`<span class="index-chip"><b>${esc(aliases[id])}</b> · ${esc(indexOptionLabel(x))}<button type="button" onclick="removeContractIndex(${i},'${id}')" title="지표 연결 해제">×</button></span>`:''}).join('');
+  const aliasDetails=(m.indexIds||[]).map(id=>{const x=db.indexes.find(z=>z.id===id);return x?`<div><code>${esc(aliases[id])}</code> = ${esc(indexOptionLabel(x))}</div>`:''}).join('');
+  return `<div class="material-map-row" data-row="${i}" data-index-ids="${esc(JSON.stringify(m.indexIds||[]))}" data-index-aliases="${esc(JSON.stringify(aliases))}">
+   <div><input class="material-name-input" aria-label="원재료 이름 수정" title="자동 추출된 원재료명을 수정하세요" value="${esc(m.name)}" oninput="syncMaterialNamesFromRows()"><div class="small">주요 원재료 / 에너지 · 이름 수정 가능</div><select class="material-type-select" title="품번 관리 입력 단위" style="margin-top:7px;width:100%;padding:7px;border:1px solid #dce3ed;border-radius:7px" onchange="syncMaterialNamesFromRows()"><option value="kg" ${(m.inputType||guessMaterialType(m.name))==='kg'?'selected':''}>중량 (kg)</option><option value="percent" ${(m.inputType||guessMaterialType(m.name))==='percent'?'selected':''}>원가비중 (%)</option></select></div>
    <div><div style="display:flex;gap:8px;flex-wrap:wrap"><select class="index-choice"><option value="">Index 데이터 관리 목록에서 기준지표 선택</option>${options}</select><button class="btn" type="button" onclick="addContractIndex(${i})">＋ 지표 연결</button></div>
-   <div class="selected-index-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${chips||'<span class="small">아직 연결된 기준지표가 없습니다.</span>'}</div></div>
+   <div class="selected-index-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${chips||'<span class="small">아직 연결된 기준지표가 없습니다.</span>'}</div>
+   <div class="material-formula-panel">
+    <label>이 원소재의 연동제 계산 산식 · 업체별 개별 설정</label>
+    <div class="small">각 지표에는 고유 기호가 붙습니다. 기준가격·비교가격·변동률·변동액의 적용 방법 및 가중치를 계약에 맞춰 직접 작성하세요.</div>
+    <div class="index-aliases">${aliasDetails||'기준지표를 연결하면 I1, I2 등 기호가 표시됩니다.'}</div>
+    <textarea class="material-formula" placeholder="예: 주물 중량(kg) × [I1 가격변동액(원/kg) × 50% + I2 가격변동액(원/kg) × 30% + I3 가격변동액(원/kg) × 20%]">${esc(m.materialFormula||'')}</textarea>
+    <label style="margin-top:10px">산식 적용 기준 / 비고 (선택)</label>
+    <textarea class="material-formula-notes" rows="2" placeholder="예: 업체 합의 가중치, 기준·비교시점, 단위 환산, 트리거 적용 방식">${esc(m.formulaNotes||'')}</textarea>
+    <div class="small">※ 계산식은 업체 계약정보에 보관됩니다. 아직 자동 계산하거나 임의로 해석하지 않습니다. 트리거는 원소재별 Index 변동률 판단에 적용하도록 후속 계산 엔진에서 검증해야 합니다.</div>
+   </div></div>
   </div>`;
  }).join('');
 }
 function collectContractMaterialRows(){
- return [...document.querySelectorAll('.material-map-row')].map(row=>({name:row.querySelector('.material-name-input').value.trim(),indexIds:JSON.parse(row.dataset.indexIds||'[]')}));
+ return [...document.querySelectorAll('.material-map-row')].map(row=>({
+  name:row.querySelector('.material-name-input').value.trim(),
+  inputType:row.querySelector('.material-type-select')?.value||guessMaterialType(row.querySelector('.material-name-input').value),
+  indexIds:JSON.parse(row.dataset.indexIds||'[]'),
+  indexAliases:JSON.parse(row.dataset.indexAliases||'{}'),
+  materialFormula:row.querySelector('.material-formula')?.value.trim()||'',
+  formulaNotes:row.querySelector('.material-formula-notes')?.value.trim()||''
+ }));
 }
 // 이름을 바꾸는 즉시 위의 원재료 목록에도 반영합니다. 기존 Index 연결은 그대로 유지됩니다.
 function syncMaterialNamesFromRows(){
@@ -240,7 +274,10 @@ function addContractIndex(i){
 }
 function removeContractIndex(i,id){
  const mats=collectContractMaterialRows();if(!mats[i])return;
- mats[i].indexIds=mats[i].indexIds.filter(x=>x!==id);renderContractMaterialRows(mats);
+ const alias=mats[i].indexAliases?.[id];
+ if(alias&&new RegExp('\\b'+alias+'\\b').test(mats[i].materialFormula||'')&&!confirm('이 지표 기호('+alias+')가 산식에 사용되고 있습니다. 연결을 해제하면 산식도 직접 수정해야 합니다. 계속할까요?'))return;
+ mats[i].indexIds=mats[i].indexIds.filter(x=>x!==id);
+ renderContractMaterialRows(mats);
 }
 function saveSupplier(){
  const name=document.getElementById('sName').value.trim();
@@ -248,7 +285,7 @@ function saveSupplier(){
  const triggerRaw=document.getElementById('sTrigger').value;
  const materials=collectContractMaterialRows();
  const names=splitMaterialNames();
- const finalMaterials=materials.map(m=>({name:m.name.trim(),indexIds:m.indexIds}));
+ const finalMaterials=materials.map(m=>({name:m.name.trim(),inputType:m.inputType||guessMaterialType(m.name),indexIds:m.indexIds,indexAliases:m.indexAliases||{},materialFormula:m.materialFormula||'',formulaNotes:m.formulaNotes||''}));
  const rowNames=finalMaterials.map(m=>m.name);
  if(names.length!==rowNames.length||names.some((n,i)=>n!==rowNames[i])){
   alert('위 원재료 목록과 아래 연결 행이 다릅니다. [원재료 행 생성]을 눌러 목록을 반영한 뒤 저장하세요.');return;
@@ -272,7 +309,7 @@ function saveSupplier(){
   id:editingSupplier||crypto.randomUUID(),name,mainProduct,
   baseDate:document.getElementById('sBaseDate').value,
   triggerPercent:Number(triggerRaw),cycle:document.getElementById('sCycle').value,
-  adjustmentDates,materials:finalMaterials,extraMaterials:(db.suppliers.find(x=>x.id===editingSupplier)?.extraMaterials||[]),linkageFormula:formula,formula,
+  adjustmentDates,materials:finalMaterials,extraMaterials:(db.suppliers.find(x=>x.id===editingSupplier)?.extraMaterials||[]),materialTypes:(db.suppliers.find(x=>x.id===editingSupplier)?.materialTypes||{}),linkageFormula:formula,formula,
   contractAdjustmentDay:document.getElementById('sOriginalAdjustment').value.trim(),
   comparisonBasis:document.getElementById('sComparisonBasis').value.trim(),
   indexDescription:document.getElementById('sIndexDescription').value.trim(),
@@ -302,6 +339,28 @@ function fillSupplierOptions(){
  f.value=db.suppliers.some(s=>s.id===old)?old:'';
  const c=document.getElementById('calcSupplier'),prev=c.value;c.innerHTML=opts;c.value=prev;fillCalcParts();
 }
+// 업체 계약에 설정한 소재별 입력 단위. OCR 소재명은 담당자가 변경할 수 있다.
+function guessMaterialType(name){
+ const t=String(name||'').replace(/\s+/g,'').toLowerCase();
+ return /(전기|전력|전력비|전기료|가스|도시가스|연료|에너지|유틸리티|수도|스팀|증기|용수|공업용수|열사용|난방)/.test(t)?'percent':'kg';
+}
+function materialInputType(supplierId,name){
+ const supplier=db.suppliers.find(s=>s.id===supplierId);
+ const item=(supplier?.materials||[]).find(m=>(typeof m==='string'?m:m.name)===name);
+ return (typeof item==='object'&&item?.inputType)||supplier?.materialTypes?.[name]||guessMaterialType(name);
+}
+function partMaterialValue(p,name,type){return type==='percent'?(p.costShares?.[name]??''):(p.weights?.[name]??'');}
+function recordPriceRevision(previous,current){
+ if(!previous||previous.partNo!==current.partNo||previous.supplierId!==current.supplierId)return current;
+ const oldPrice=previous.unitPrice??(previous.currentPrice!==''&&previous.currentPrice!=null?previous.currentPrice:previous.basePrice);
+ const oldDate=previous.priceBaseDate||'';
+ if(oldPrice===''||oldPrice==null||!oldDate)return current;
+ if(Number(oldPrice)===Number(current.unitPrice)&&oldDate===current.priceBaseDate)return current;
+ const history=Array.isArray(previous.priceHistory)?[...previous.priceHistory]:[];
+ if(!history.length)history.push({type:'최초 등록',effectiveDate:oldDate,unitPrice:Number(oldPrice)});
+ history.push({type:'등록 단가 변경',effectiveDate:current.priceBaseDate,unitPrice:Number(current.unitPrice),previousUnitPrice:Number(oldPrice),recordedAt:new Date().toISOString()});
+ return {...current,priceHistory:history};
+}
 // 품번별 원소재 열은 업체 계약정보를 기준으로 생성한다. 구버전 입력 중량도 보존한다.
 function supplierMaterialNames(supplierId){
  const supplier=db.suppliers.find(s=>s.id===supplierId);
@@ -317,11 +376,11 @@ function visiblePartMaterials(){
 }
 function renderParts(){
  const mats=visiblePartMaterials(),filter=document.getElementById('partSupplierFilter')?.value||'';
- document.getElementById('partHead').innerHTML='<tr><th>업체</th><th>품번</th><th>품명</th><th>기준 파트단가 (원/EA)</th><th>현재 구매단가 (원/EA)</th>'+mats.map(m=>`<th>${esc(m)} (kg)</th>`).join('')+'<th>관리</th></tr>';
+ document.getElementById('partHead').innerHTML='<tr><th>업체</th><th>품번</th><th>품명</th><th>등록 단가 (원/EA)</th><th>단가 기준일</th>'+mats.map(m=>{const types=[...new Set((filter?[filter]:db.suppliers.filter(x=>supplierMaterialNames(x.id).includes(m)).map(x=>x.id)).map(id=>materialInputType(id,m)))];return `<th>${esc(m)} (${types.length===1?(types[0]==='percent'?'원가비중 %':'kg'):'kg / %'})</th>`}).join('')+'<th>관리</th></tr>';
  const rows=db.parts.map((p,i)=>({...p,_i:i})).filter(p=>!filter||p.supplierId===filter);
  document.getElementById('partRows').innerHTML=rows.length?rows.map(p=>{
   const allowed=new Set(supplierMaterialNames(p.supplierId));
-  return `<tr data-index="${p._i}"><td><select class="cell supplier-cell">${db.suppliers.map(s=>`<option value="${s.id}" ${s.id===p.supplierId?'selected':''}>${esc(s.name)}</option>`).join('')}</select></td><td><input class="cell partno" value="${esc(p.partNo)}" style="width:110px"></td><td><input class="cell partname" value="${esc(p.partName||'')}" style="width:110px"></td><td><input class="cell base" type="number" min="0" value="${p.basePrice??''}" style="width:115px"></td><td><input class="cell current" type="number" min="0" value="${p.currentPrice??''}" style="width:115px"></td>${mats.map(m=>allowed.has(m)?`<td><input class="cell weight" data-material="${esc(m)}" type="number" min="0" step="0.001" placeholder="-" value="${p.weights?.[m]??''}" style="width:85px"></td>`:'<td class="muted">—</td>').join('')}<td><button class="action-link" onclick="deletePart(${p._i})">삭제</button></td></tr>`;
+  return `<tr data-index="${p._i}"><td><select class="cell supplier-cell">${db.suppliers.map(s=>`<option value="${s.id}" ${s.id===p.supplierId?'selected':''}>${esc(s.name)}</option>`).join('')}</select></td><td><input class="cell partno" value="${esc(p.partNo)}" style="width:110px"></td><td><input class="cell partname" value="${esc(p.partName||'')}" style="width:110px"></td><td><input class="cell price" type="number" min="0" step="any" value="${esc(p.unitPrice??(p.currentPrice!==''&&p.currentPrice!=null?p.currentPrice:p.basePrice??''))}" style="width:130px"></td><td><input class="cell price-date" type="date" value="${esc(p.priceBaseDate||'')}" style="width:145px"></td>${mats.map(m=>{if(!allowed.has(m))return '<td class="muted">—</td>';const type=materialInputType(p.supplierId,m);return `<td><input class="cell material-value" data-material="${esc(m)}" data-input-type="${type}" type="number" min="0" max="${type==='percent'?100:''}" step="0.001" placeholder="-" value="${partMaterialValue(p,m,type)}" title="${type==='percent'?'원가비중 0~100%':'중량 kg'}" style="width:95px"></td>`}).join('')}<td><button class="action-link" onclick="deletePart(${p._i})">삭제</button></td></tr>`;
  }).join(''):`<tr><td colspan="${6+mats.length}" class="empty">등록된 품번이 없습니다. 먼저 업체 계약에 원소재를 등록한 뒤 품번을 추가하세요.</td></tr>`;
 }
 function addPartRow(){
@@ -329,7 +388,7 @@ function addPartRow(){
  const filter=document.getElementById('partSupplierFilter');
  const supplierId=filter.value||db.suppliers[0].id;
  if(!filter.value)filter.value=supplierId;
- db.parts.push({supplierId,partNo:'',partName:'',basePrice:'',currentPrice:'',weights:{}});
+ db.parts.push({supplierId,partNo:'',partName:'',unitPrice:'',priceBaseDate:'',weights:{}});
  renderParts();
 }
 function deletePart(i){if(!confirm('이 품번 행을 삭제할까요? 저장 전 변경사항도 함께 반영됩니다.'))return;db.parts.splice(i,1);log('품번 삭제','품번 행 삭제');persist()}
@@ -340,7 +399,8 @@ function addMaterial(){
  let n=prompt('이 업체에 추가할 원소재명을 입력하세요.');if(!n)return;n=n.trim();if(!n)return;
  if(n==='환율'){alert('환율은 kg 원소재 열로 추가할 수 없습니다. 업체 계약 조건 메모에 별도 등록하세요.');return}
  if(supplierMaterialNames(id).includes(n)){alert('이미 등록된 원소재입니다.');return}
- supplier.extraMaterials=[...(supplier.extraMaterials||[]),n];
+ const type=confirm(n+'\n\n원가비중(%)으로 입력하려면 [확인], 중량(kg)이면 [취소]를 누르세요.')?'percent':'kg';
+ supplier.extraMaterials=[...(supplier.extraMaterials||[]),n];supplier.materialTypes={...(supplier.materialTypes||{}),[n]:type};
  log('원소재 항목 추가',supplier.name+' / '+n);persist();
 }
 function saveParts(){
@@ -348,33 +408,80 @@ function saveParts(){
  try{
   for(const tr of trs){
    const idx=Number(tr.dataset.index),p=db.parts[idx],supplierId=tr.querySelector('.supplier-cell').value;
-   const partNo=tr.querySelector('.partno').value.trim(),base=tr.querySelector('.base').value,current=tr.querySelector('.current').value;
+   const partNo=tr.querySelector('.partno').value.trim(),price=tr.querySelector('.price').value,priceDate=tr.querySelector('.price-date').value;
    if(!partNo)throw Error((idx+1)+'번째 데이터의 품번이 비어 있습니다.');
-   if((base!==''&&Number(base)<0)||(current!==''&&Number(current)<0))throw Error(partNo+': 단가는 음수일 수 없습니다.');
-   // 화면에 표시하지 않은 원소재 중량은 지우지 않는다.
-   const weights={...(p.weights||{})};
-   tr.querySelectorAll('.weight').forEach(x=>{
-    if(x.value==='')delete weights[x.dataset.material];
-    else if(Number(x.value)<0||!Number.isFinite(Number(x.value)))throw Error(partNo+' / '+x.dataset.material+': 중량을 확인하세요.');
-    else weights[x.dataset.material]=Number(x.value);
+   if(price===''||!Number.isFinite(Number(price))||Number(price)<0)throw Error(partNo+': 등록 단가를 정확하게 입력하세요.');
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(priceDate)||Number.isNaN(Date.parse(priceDate)))throw Error(partNo+': 단가 기준일을 입력하세요.');
+   const weights={...(p.weights||{})},costShares={...(p.costShares||{})};
+   tr.querySelectorAll('.material-value').forEach(x=>{
+    const key=x.dataset.material,type=x.dataset.inputType,store=type==='percent'?costShares:weights,other=type==='percent'?weights:costShares;
+    if(x.value==='')delete store[key];
+    else if(!Number.isFinite(Number(x.value))||Number(x.value)<0||(type==='percent'&&Number(x.value)>100))throw Error(partNo+' / '+key+': '+(type==='percent'?'원가비중은 0~100%':'중량은 0 이상')+'으로 입력하세요.');
+    else store[key]=Number(x.value);
+    delete other[key];
    });
-   updates.push({idx,data:{...p,supplierId,partNo,partName:tr.querySelector('.partname').value,basePrice:base===''?'':Number(base),currentPrice:current===''?'':Number(current),weights}});
+   const data={...p,supplierId,partNo,partName:tr.querySelector('.partname').value,unitPrice:Number(price),priceBaseDate:priceDate,weights,costShares};
+   updates.push({idx,data:recordPriceRevision(p,data)});
   }
  }catch(e){alert(e.message);return}
  const next=db.parts.slice();updates.forEach(x=>next[x.idx]=x.data);
  const dup=next.filter(p=>p.partNo).map(p=>p.supplierId+'|'+p.partNo).filter((x,i,a)=>a.indexOf(x)!==i);
  if(dup.length&&!confirm('같은 업체에 중복된 품번이 있습니다. 그래도 저장할까요?'))return;
- db.parts=next;log('품번 저장',updates.length+'개 행 저장');persist();alert('품번 데이터가 저장되었습니다.');
+ const revisions=updates.filter(x=>(x.data.priceHistory||[]).length>(db.parts[x.idx]?.priceHistory||[]).length);
+ db.parts=next;revisions.forEach(x=>log('등록 단가 변경',x.data.partNo+' / '+money(x.data.unitPrice)+'원 / '+x.data.priceBaseDate));
+ log('품번 저장',updates.length+'개 행 저장');persist();alert('품번 데이터가 저장되었습니다.');
+}
+function selectedPartSupplier(){
+ const id=document.getElementById('partSupplierFilter')?.value||'';
+ const supplier=db.suppliers.find(s=>s.id===id);
+ if(!supplier)alert('먼저 CSV 양식을 사용할 업체를 선택하세요.');
+ return supplier||null;
+}
+function openPartCsvUpload(){
+ if(!selectedPartSupplier())return;
+ document.getElementById('partFile').click();
 }
 function downloadTemplate(){
- const filter=document.getElementById('partSupplierFilter')?.value||'';
- const mats=filter?supplierMaterialNames(filter):visiblePartMaterials();
- const headers=['업체명','품번','품명','기준 파트단가','현재 구매단가',...mats.map(x=>x+'(kg)')];
+ const supplier=selectedPartSupplier();if(!supplier)return;
+ const mats=supplierMaterialNames(supplier.id);
+ const headers=['업체명','품번','품명','등록 단가','단가 기준일',...mats.map(x=>x+(materialInputType(supplier.id,x)==='percent'?'(%)':'(kg)'))];
  const csv='\uFEFF'+headers.join(',')+'\n';
- const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='품번_원소재_업로드양식.csv';a.click();URL.revokeObjectURL(a.href);
+ const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(supplier.name.replace(/[\\/:*?"<>|]/g,'_')||'업체')+'_품번_원소재_업로드양식.csv';a.click();URL.revokeObjectURL(a.href);
 }
 function parseCSV(text){let lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim());return lines.map(line=>{let out=[],v='',q=false;for(let i=0;i<line.length;i++){let c=line[i];if(c==='"'&&line[i+1]==='"'&&q){v+='"';i++}else if(c==='"')q=!q;else if(c===','&&!q){out.push(v);v=''}else v+=c}out.push(v);return out})}
-function importParts(e){let file=e.target.files[0];if(!file)return;let reader=new FileReader();reader.onload=()=>{try{let rows=parseCSV(reader.result),h=rows.shift().map(x=>x.trim()),idx=(...names)=>h.findIndex(x=>names.includes(x));let si=idx('업체명'),pi=idx('품번'),bi=idx('기준 파트단가'),ni=idx('품명'),ci=idx('현재 구매단가');if(si<0||pi<0||bi<0)throw Error('필수 열(업체명, 품번, 기준 파트단가)을 찾을 수 없습니다.');let materialCols=h.map((x,i)=>({name:x.replace(/\s*\(kg\)\s*$/,'').trim(),i})).filter(x=>x.i!==si&&x.i!==pi&&x.i!==bi&&x.i!==ni&&x.i!==ci&&x.name);let staged=[],errors=[];rows.forEach((r,k)=>{let name=r[si]?.trim(),partNo=r[pi]?.trim(),supplier=db.suppliers.find(s=>s.name===name);if(!supplier){errors.push((k+2)+'행: 등록되지 않은 업체 '+name);return}if(!partNo){errors.push((k+2)+'행: 품번 누락');return}let weights={};for(let m of materialCols){let val=r[m.i]?.trim();if(val==='')continue;if(!Number.isFinite(Number(val))||Number(val)<0){errors.push((k+2)+'행 '+m.name+': 중량은 0 이상의 숫자여야 합니다.');continue}weights[m.name]=Number(val)}staged.push({supplierId:supplier.id,partNo,partName:ni>=0?r[ni]||'':'',basePrice:r[bi]===''?'':Number(r[bi]),currentPrice:ci>=0&&r[ci]!==''?Number(r[ci]):'',weights})});if(errors.length&&!confirm('오류 '+errors.length+'건이 있습니다. 오류 행은 제외하고 정상 행 '+staged.length+'건만 미리보기 후 저장할까요?\n'+errors.slice(0,8).join('\n')))return;if(!staged.length){alert(errors.join('\n')||'가져올 데이터가 없습니다.');return}staged.forEach(p=>{const supplier=db.suppliers.find(s=>s.id===p.supplierId);if(!supplier)return;const existing=new Set(supplierMaterialNames(supplier.id));Object.keys(p.weights).forEach(m=>{if(m!=='환율'&&!existing.has(m)){supplier.extraMaterials=[...(supplier.extraMaterials||[]),m];existing.add(m)}})});let preview=staged.map(p=>p.partNo+' / '+db.suppliers.find(s=>s.id===p.supplierId).name).join('\n');if(confirm('업로드 미리보기 ('+staged.length+'건)\n'+preview+'\n\n기존 품번과 중복되면 덮어씁니다. 진행할까요?')){staged.forEach(p=>{let i=db.parts.findIndex(x=>x.supplierId===p.supplierId&&x.partNo===p.partNo);if(i>=0)db.parts[i]=p;else db.parts.push(p)});log('CSV 업로드',file.name+' / '+staged.length+'건');persist();alert('업로드 완료: '+staged.length+'건'+(errors.length?' / 오류 제외 '+errors.length+'건':''))}}catch(err){alert('업로드 실패: '+err.message)}e.target.value=''};reader.readAsText(file,'UTF-8')}
+function importParts(e){
+ const file=e.target.files[0];if(!file)return;const targetSupplier=selectedPartSupplier();if(!targetSupplier){e.target.value='';return}
+ const reader=new FileReader();reader.onload=()=>{try{
+  const rows=parseCSV(reader.result),h=(rows.shift()||[]).map(x=>x.trim()),idx=(...names)=>h.findIndex(x=>names.includes(x));
+  const si=idx('업체명'),pi=idx('품번'),bi=idx('등록 단가','현재 적용단가','기준 파트단가'),ni=idx('품명'),ci=idx('단가 기준일'),oldCurrent=idx('현재 구매단가');
+  if(si<0||pi<0||bi<0||ci<0)throw Error('필수 열(업체명, 품번, 등록 단가, 단가 기준일)이 필요합니다. 새 CSV 양식을 다운로드하세요.');
+  const reserved=new Set([si,pi,bi,ni,ci,oldCurrent]);
+  const materialCols=h.map((label,i)=>({name:label.replace(/\s*\((?:kg|%)\)\s*$/i,'').trim(),type:/\(\s*%\s*\)$/.test(label)?'percent':'kg',i})).filter(x=>!reserved.has(x.i)&&x.name);
+  const expected=supplierMaterialNames(targetSupplier.id);
+  const mismatch=materialCols.filter(m=>!expected.includes(m.name)||materialInputType(targetSupplier.id,m.name)!==m.type);
+  if(mismatch.length)throw Error('선택 업체의 원소재명 또는 입력 단위가 CSV 양식과 다릅니다: '+mismatch.map(m=>m.name+'('+m.type+')').join(', ')+'\n새 양식을 다운로드하세요.');
+  const staged=[],errors=[];
+  rows.forEach((r,k)=>{
+   const name=r[si]?.trim(),partNo=r[pi]?.trim(),supplier=db.suppliers.find(s=>s.name===name),rawPrice=r[bi]?.trim()||'',rawDate=r[ci]?.trim()||'';
+   if(!supplier||supplier.id!==targetSupplier.id){errors.push((k+2)+'행: 선택한 업체와 다릅니다.');return}
+   if(!partNo){errors.push((k+2)+'행: 품번 누락');return}
+   if(rawPrice===''||!Number.isFinite(Number(rawPrice.replace(/,/g,'')))||Number(rawPrice.replace(/,/g,''))<0){errors.push((k+2)+'행: 등록 단가 오류');return}
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(rawDate)||Number.isNaN(Date.parse(rawDate))){errors.push((k+2)+'행: 단가 기준일 오류');return}
+   const weights={},costShares={};let invalid=false;
+   for(const m of materialCols){const val=r[m.i]?.trim();if(!val)continue;const num=Number(val.replace(/,/g,''));if(!Number.isFinite(num)||num<0||(m.type==='percent'&&num>100)){errors.push((k+2)+'행 '+m.name+': '+(m.type==='percent'?'원가비중은 0~100%':'중량은 0 이상'));invalid=true;break}(m.type==='percent'?costShares:weights)[m.name]=num}
+   if(invalid)return;
+   const existing=db.parts.find(p=>p.supplierId===supplier.id&&p.partNo===partNo);
+   const data={...(existing||{}),supplierId:supplier.id,partNo,partName:ni>=0?r[ni]||'':'',unitPrice:Number(rawPrice.replace(/,/g,'')),priceBaseDate:rawDate,weights,costShares};
+   staged.push(recordPriceRevision(existing,data));
+  });
+  if(errors.length&&!confirm('오류 '+errors.length+'건은 제외하고 정상 '+staged.length+'건을 계속할까요?\n'+errors.slice(0,8).join('\n')))return;
+  if(!staged.length){alert(errors.join('\n')||'가져올 데이터가 없습니다.');return}
+  if(confirm('업로드 미리보기 '+staged.length+'건\n'+staged.map(p=>p.partNo).slice(0,25).join(', ')+'\n기존 품번은 갱신하되 변경 이력은 유지합니다. 진행할까요?')){
+   staged.forEach(p=>{const i=db.parts.findIndex(x=>x.supplierId===p.supplierId&&x.partNo===p.partNo);if(i>=0)db.parts[i]=p;else db.parts.push(p)});
+   log('CSV 업로드',file.name+' / '+staged.length+'건');persist();alert('업로드 완료: '+staged.length+'건');
+  }
+ }catch(err){alert('CSV 업로드 실패: '+err.message)}e.target.value=''};reader.readAsText(file,'UTF-8');
+}
 
 function cleanCell(v){return v===null||v===undefined?'':String(v).trim()}
 function importIndexes(e){
@@ -493,7 +600,7 @@ function renderIndexes(){
 }
 
 function fillCalcParts(){let sid=document.getElementById('calcSupplier').value;document.getElementById('calcPart').innerHTML=db.parts.filter(p=>p.supplierId===sid).map(p=>`<option value="${esc(p.partNo)}">${esc(p.partNo)} ${esc(p.partName||'')}</option>`).join('')||'<option value="">품번 없음</option>'}
-function validateCalculation(){let sid=document.getElementById('calcSupplier').value,partNo=document.getElementById('calcPart').value,p=db.parts.find(x=>x.supplierId===sid&&x.partNo===partNo),s=db.suppliers.find(x=>x.id===sid);if(!p||!s){alert('업체와 품번을 선택하세요.');return}let issues=[];if(!s.formula)issues.push('업체 계약 수식 또는 조건 메모 미등록');if(p.basePrice===''||p.basePrice==null)issues.push('기준 파트단가 누락');if(!Object.keys(p.weights||{}).length)issues.push('원소재 사용량 미등록');if(!db.indexes.length)issues.push('Index 데이터 미등록');let req=document.getElementById('requestedPrice').value;let el=document.getElementById('calcResult');el.classList.remove('hidden');el.innerHTML=`<div class="panel-head"><h3>검증 결과 · ${esc(partNo)}</h3><span class="pill orange">계산 실행 전 검토</span></div><p><b>업체:</b> ${esc(s.name)}　 <b>기준 파트단가:</b> ${money(p.basePrice)}원/EA　 <b>업체 요청단가:</b> ${req?money(req)+'원/EA':'미입력'}</p><p><b>등록 소재:</b> ${Object.entries(p.weights||{}).map(([k,v])=>esc(k)+' '+v+'kg').join(' / ')||'없음'}</p><hr style="border:0;border-top:1px solid #edf0f5"><b>확인 항목</b><ul>${issues.length?issues.map(x=>'<li style="color:#c17a1d">'+esc(x)+'</li>').join(''):'<li style="color:#16845e">기본 입력 데이터 확인 완료. 다만 계약 수식·Index 매칭의 유효성은 별도 검증이 필요합니다.</li>'}</ul><div class="notice">이 시제품은 실제 연동액과 변경 단가를 계산하지 않습니다. 계약서의 산식·단위·기준 Index를 검증한 계산 엔진이 구현되기 전까지 결과를 확정값으로 사용하지 마세요.</div><button class="btn" onclick="window.print()">검증 화면 인쇄</button>`;log('검증',s.name+' / '+partNo+' / 검토 '+issues.length+'건');persist()}
+function validateCalculation(){let sid=document.getElementById('calcSupplier').value,partNo=document.getElementById('calcPart').value,p=db.parts.find(x=>x.supplierId===sid&&x.partNo===partNo),s=db.suppliers.find(x=>x.id===sid);if(!p||!s){alert('업체와 품번을 선택하세요.');return}let issues=[];if(!s.formula)issues.push('업체 계약 수식 또는 조건 메모 미등록');const price=p.unitPrice??(p.currentPrice!==''&&p.currentPrice!=null?p.currentPrice:p.basePrice);if(price===''||price==null)issues.push('등록 단가 누락');if(!p.priceBaseDate)issues.push('단가 기준일 누락');if(!Object.keys(p.weights||{}).length&&!Object.keys(p.costShares||{}).length)issues.push('원소재 중량 또는 원가비중 미등록');if(!db.indexes.length)issues.push('Index 데이터 미등록');let req=document.getElementById('requestedPrice').value;let el=document.getElementById('calcResult');el.classList.remove('hidden');el.innerHTML=`<div class="panel-head"><h3>검증 결과 · ${esc(partNo)}</h3><span class="pill orange">계산 실행 전 검토</span></div><p><b>업체:</b> ${esc(s.name)}　 <b>등록 단가:</b> ${money(price)}원/EA　 <b>단가 기준일:</b> ${esc(p.priceBaseDate||'미입력')}　 <b>업체 요청단가:</b> ${req?money(req)+'원/EA':'미입력'}</p><p><b>업체 갱신 시점(매년):</b> ${esc((s.adjustmentDates||[]).map(x=>String(x).slice(-5)).join(', ')||'미등록')}</p><p><b>등록 소재:</b> ${[...Object.entries(p.weights||{}).map(([k,v])=>esc(k)+' '+v+'kg'),...Object.entries(p.costShares||{}).map(([k,v])=>esc(k)+' 원가비중 '+v+'%')].join(' / ')||'없음'}</p><hr style="border:0;border-top:1px solid #edf0f5"><b>확인 항목</b><ul>${issues.length?issues.map(x=>'<li style="color:#c17a1d">'+esc(x)+'</li>').join(''):'<li style="color:#16845e">기본 입력 데이터 확인 완료. 다만 계약 수식·Index 매칭의 유효성은 별도 검증이 필요합니다.</li>'}</ul><div class="notice">이 시제품은 실제 연동액과 변경 단가를 계산하지 않습니다. 계약서의 산식·단위·기준 Index를 검증한 계산 엔진이 구현되기 전까지 결과를 확정값으로 사용하지 마세요.</div><button class="btn" onclick="window.print()">검증 화면 인쇄</button>`;log('검증',s.name+' / '+partNo+' / 검토 '+issues.length+'건');persist()}
 function renderHistory(){document.getElementById('historyRows').innerHTML=db.history.length?db.history.map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.type)}</td><td>${esc(x.detail)}</td></tr>`).join(''):'<tr><td colspan="3" class="empty">저장된 이력이 없습니다.</td></tr>'}
 function clearHistory(){if(confirm('모든 이력을 삭제할까요?')){db.history=[];persist()}}
 
